@@ -26,6 +26,21 @@ import com.example.arduinocontroller.ui.theme.ArduinoControllerTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN),
+            1)
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter
+        val bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        if (bluetoothPermissionsGranted) {
+            println(bluetoothAdapter.bondedDevices)
+            //val HC05 = bluetoothAdapter.getRemoteDevice("MACADDRESS")
+            //println(HC05.getName())
+        }
         //setContentView(R.layout.layout)
         setContent {
             ArduinoControllerTheme {
@@ -34,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     Greeting("Android")
 
                     Column {
-                            Button(onClick = { /*TODO
+                            Button(onClick = { println(bluetoothAdapter.bondedDevices)/*TODO
                         Send signal for motion*/
                             }, modifier = Modifier.width(100.dp)) {
                                 Text("Up")
@@ -72,15 +87,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN),
-            1)
-        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothManager.adapter
-        val bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+
         /*val bluetoothPermissions = arrayOf(
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.BLUETOOTH_SCAN
@@ -93,9 +100,7 @@ class MainActivity : ComponentActivity() {
                 }
             })*/
 
-        if (bluetoothPermissionsGranted) {
-            println(bluetoothAdapter.bondedDevices)
-        }
+
     }
 }
 
