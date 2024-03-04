@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.arduinocontroller.ui.theme.ArduinoControllerTheme
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
             this,
             arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN),
             1)
+        val UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
         val bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
@@ -38,8 +40,9 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         if (bluetoothPermissionsGranted) {
             println(bluetoothAdapter.bondedDevices)
-            //val HC05 = bluetoothAdapter.getRemoteDevice("MACADDRESS")
+            val HC05 = bluetoothAdapter.getRemoteDevice("MACADDRESS")
             //println(HC05.getName())
+            val bluetoothSocket = HC05.createRfcommSocketToServiceRecord(UUID)
         }
         //setContentView(R.layout.layout)
         setContent {
