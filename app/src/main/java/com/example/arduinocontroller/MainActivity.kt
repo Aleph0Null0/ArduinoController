@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.arduinocontroller.ui.theme.ArduinoControllerTheme
+import java.io.DataOutputStream
 import java.util.*
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         ActivityCompat.requestPermissions(
             this,
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN),
+            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
             1)
         val UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -40,47 +41,59 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         if (bluetoothPermissionsGranted) {
             println(bluetoothAdapter.bondedDevices)
-            val HC05 = bluetoothAdapter.getRemoteDevice("MACADDRESS")
-            //println(HC05.getName())
-            val bluetoothSocket = HC05.createRfcommSocketToServiceRecord(UUID)
-        }
-        //setContentView(R.layout.layout)
-        setContent {
-            ArduinoControllerTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Greeting("Android")
+            val hc05 = bluetoothAdapter.getRemoteDevice("00:0E:EA:CF:7C:37")
+            println(hc05.getName())
+            val bluetoothSocket = hc05.createRfcommSocketToServiceRecord(UUID)
+            bluetoothSocket.connect()
+            println(bluetoothSocket.isConnected)
+            val outStream = bluetoothSocket.outputStream
+            val dataOutStream = DataOutputStream(outStream)
 
-                    Column {
-                            Button(onClick = { println(bluetoothAdapter.bondedDevices)/*TODO
+            //setContentView(R.layout.layout)
+            setContent {
+                ArduinoControllerTheme {
+                    // A surface container using the 'background' color from the theme
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                        Greeting("There")
+
+                        Column {
+                            Button(onClick = {
+                                println(bluetoothAdapter.bondedDevices)
+                                println(bluetoothSocket.isConnected)
+                                /*TODO
                         Send signal for motion*/
                             }, modifier = Modifier.width(100.dp)) {
                                 Text("Up")
                             }
-                        Row {
-                            Button(onClick = { /*TODO
+                            Row {
+                                Button(onClick = {
+                                                 /*TODO
                     Send signal for motion*/
-                            }, modifier = Modifier.width(100.dp)) {
-                                Text("Left")
-                            }
+                                }, modifier = Modifier.width(100.dp)) {
+                                    Text("Left")
+                                }
 
-                            Button(onClick = { /*TODO
+                                Button(onClick = {
+                                    outStream.write("1".toByteArray())
+                                             /*TODO
                     Send signal for grabbing*/
-                            }, modifier = Modifier.width(100.dp)) {
-                                Text("Grab")
-                            }
-                            Button(onClick = { /*TODO
+                                }, modifier = Modifier.width(100.dp)) {
+                                    Text("Grab")
+                                }
+                                Button(onClick = { /*TODO
                     Send signal for motion*/
-                            }, modifier = Modifier.width(100.dp)) {
-                                Text("Right")
+                                }, modifier = Modifier.width(100.dp)) {
+                                    Text("Right")
+                                }
                             }
-                        }
                             Button(onClick = { /*TODO
                         Send signal for motion*/
                             }, modifier = Modifier.width(100.dp)) {
                                 Text("Down")
                             }
-                            Button(onClick = { /*TODO
+                            Button(onClick = {
+                                outStream.write("2".toByteArray())
+                                             /*TODO
                         Send signal for forward motion*/
                             }, modifier = Modifier.width(100.dp)) {
                                 Text("Release")
@@ -91,11 +104,11 @@ class MainActivity : ComponentActivity() {
             }
 
 
-        /*val bluetoothPermissions = arrayOf(
+            /*val bluetoothPermissions = arrayOf(
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.BLUETOOTH_SCAN
         )*/
-        /*val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+            /*val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
             onResult = { permissions ->
                 val permissionsGranted = permissions.values.reduce { acc, isPermissionGranted ->
@@ -103,7 +116,7 @@ class MainActivity : ComponentActivity() {
                 }
             })*/
 
-
+        }
     }
 }
 
@@ -150,3 +163,6 @@ fun showBluetoothPermissionRationale() {
             }
         })
 }*/
+fun sendData(data: Int, dataoutstream: DataOutputStream) {
+    dataoutstream.writeInt(data)
+}
