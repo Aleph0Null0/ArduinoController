@@ -60,39 +60,35 @@ class MainActivity : ComponentActivity() {
                             Button(onClick = {
                                 println(bluetoothAdapter.bondedDevices)
                                 println(bluetoothSocket.isConnected)
-                                /*TODO
-                        Send signal for motion*/
+                                outStream.write("1".toByteArray())
                             }, modifier = Modifier.width(100.dp)) {
-                                Text("Up")
+                                Text("Forward")
                             }
-                            Row {
-                                Button(onClick = {
-                                                 /*TODO
-                    Send signal for motion*/
-                                }, modifier = Modifier.width(100.dp)) {
-                                    Text("Left")
-                                }
-
-                                Button(onClick = {
-                                    outStream.write("1".toByteArray())
-                                             /*TODO
-                    Send signal for grabbing*/
-                                }, modifier = Modifier.width(100.dp)) {
-                                    Text("Grab")
-                                }
-                                Button(onClick = { /*TODO
-                    Send signal for motion*/
-                                }, modifier = Modifier.width(100.dp)) {
-                                    Text("Right")
-                                }
-                            }
-                            Button(onClick = { /*TODO
-                        Send signal for motion*/
+                        Row {
+                            Button(onClick = {
+                                outStream.write("3".toByteArray())
                             }, modifier = Modifier.width(100.dp)) {
-                                Text("Down")
+                                Text("Left")
                             }
                             Button(onClick = {
+                                outStream.write("5".toByteArray())
+                            }, modifier = Modifier.width(100.dp)) {
+                                Text("Grab")
+                            }
+                            Button(onClick = {
+                                outStream.write("4".toByteArray())
+                            }, modifier = Modifier.width(100.dp)) {
+                                Text("Right")
+                            }
+                        }
+                            Button(onClick = {
                                 outStream.write("2".toByteArray())
+                            }, modifier = Modifier.width(100.dp)) {
+                                Text("Reverse")
+                            }
+
+                            Button(onClick = {
+                                outStream.write("6".toByteArray())
                                              /*TODO
                         Send signal for forward motion*/
                             }, modifier = Modifier.width(100.dp)) {
