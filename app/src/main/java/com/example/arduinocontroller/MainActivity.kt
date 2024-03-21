@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
                             }
                             FloatingActionButton(onClick = {
                                 outStream.write("4".toByteArray())
-                            }, modifier = Modifier.width(400.dp)), Modifier.fillmaxHeight()]  {
+                            }, modifier = Modifier.width(400.dp))  {
                                 Text("Right")
                             }
                         }
