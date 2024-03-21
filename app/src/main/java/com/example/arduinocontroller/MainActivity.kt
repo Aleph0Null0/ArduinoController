@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,7 +26,19 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        do {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
+                1)
 
+            bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } while (!bluetoothPermissionsGranted)
         ActivityCompat.requestPermissions(
             this,
             arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
@@ -36,16 +46,19 @@ class MainActivity : ComponentActivity() {
         val UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
-        val bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         if (bluetoothPermissionsGranted) {
             println(bluetoothAdapter.bondedDevices)
             val hc05 = bluetoothAdapter.getRemoteDevice("00:0E:EA:CF:7C:37")
             println(hc05.getName())
-            val bluetoothSocket = hc05.createRfcommSocketToServiceRecord(UUID)
-            bluetoothSocket.connect()
-            println(bluetoothSocket.isConnected)
+            //try {
+                val bluetoothSocket = hc05.createRfcommSocketToServiceRecord(UUID)
+                bluetoothSocket.connect()
+                println(bluetoothSocket.isConnected)
+            //} catch (error) {
+
+            //}
+
+
             val outStream = bluetoothSocket.outputStream
             val dataOutStream = DataOutputStream(outStream)
 
@@ -56,42 +69,42 @@ class MainActivity : ComponentActivity() {
                     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                         Greeting("There")
 
-                        Column {
-                            Button(onClick = {
+                        Column (horizontalAlignment = Alignment.CenterHorizontally) {
+                            FloatingActionButton(onClick = {
                                 println(bluetoothAdapter.bondedDevices)
                                 println(bluetoothSocket.isConnected)
                                 outStream.write("1".toByteArray())
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)) {
                                 Text("Forward")
                             }
-                        Row {
-                            Button(onClick = {
+                        Row (verticalAlignment = Alignment.CenterVertically) {
+                            FloatingActionButton(onClick = {
                                 outStream.write("3".toByteArray())
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)) {
                                 Text("Left")
                             }
-                            Button(onClick = {
+                            FloatingActionButton(onClick = {
                                 outStream.write("5".toByteArray())
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)) {
                                 Text("Grab")
                             }
-                            Button(onClick = {
+                            FloatingActionButton(onClick = {
                                 outStream.write("4".toByteArray())
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)), Modifier.fillmaxHeight()]  {
                                 Text("Right")
                             }
                         }
-                            Button(onClick = {
+                            FloatingActionButton(onClick = {
                                 outStream.write("2".toByteArray())
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)) {
                                 Text("Reverse")
                             }
 
-                            Button(onClick = {
+                            FloatingActionButton(onClick = {
                                 outStream.write("6".toByteArray())
                                              /*TODO
                         Send signal for forward motion*/
-                            }, modifier = Modifier.width(100.dp)) {
+                            }, modifier = Modifier.width(400.dp)) {
                                 Text("Release")
                             }
                         }
