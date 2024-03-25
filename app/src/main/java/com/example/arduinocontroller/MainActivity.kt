@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.arduinocontroller.ui.theme.ArduinoControllerTheme
 import java.io.DataOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.util.*
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +32,7 @@ class MainActivity : ComponentActivity() {
         var bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-        do {
+        if (!bluetoothPermissionsGranted) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
@@ -38,31 +41,29 @@ class MainActivity : ComponentActivity() {
             bluetoothPermissionsGranted = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-        } while (!bluetoothPermissionsGranted)
-        ActivityCompat.requestPermissions(
+        }
+
+        /*ActivityCompat.requestPermissions(
             this,
             arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
-            1)
+            1)*/
+
         val UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
-        if (bluetoothPermissionsGranted) {
-            println(bluetoothAdapter.bondedDevices)
-            val hc05 = bluetoothAdapter.getRemoteDevice("00:0E:EA:CF:7C:37")
-            println(hc05.getName())
-            //try {
-                val bluetoothSocket = hc05.createRfcommSocketToServiceRecord(UUID)
-                bluetoothSocket.connect()
-                println(bluetoothSocket.isConnected)
-            //} catch (error) {
+        println("checkpoint1")
 
-            //}
+        val hc05 = bluetoothAdapter.getRemoteDevice("00:0E:EA:CF:7C:37")
+        val bluetoothSocket = hc05.createRfcommSocketToServiceRecord(UUID)
+        try {
+            bluetoothSocket.connect()
+        } catch (e: IOException) {
+            Log.e("Bluetooth", "IOException")
+        }
 
+        println(bluetoothSocket.isConnected)
+        val outStream = bluetoothSocket.outputStream
 
-            val outStream = bluetoothSocket.outputStream
-            val dataOutStream = DataOutputStream(outStream)
-
-            //setContentView(R.layout.layout)
             setContent {
                 ArduinoControllerTheme {
                     // A surface container using the 'background' color from the theme
@@ -70,42 +71,73 @@ class MainActivity : ComponentActivity() {
                         Greeting("There")
 
                         Column (horizontalAlignment = Alignment.CenterHorizontally) {
-                            FloatingActionButton(onClick = {
-                                println(bluetoothAdapter.bondedDevices)
-                                println(bluetoothSocket.isConnected)
-                                outStream.write("1".toByteArray())
-                            }, modifier = Modifier.width(400.dp)) {
-                                Text("Forward")
-                            }
-                        Row (verticalAlignment = Alignment.CenterVertically) {
-                            FloatingActionButton(onClick = {
-                                outStream.write("3".toByteArray())
-                            }, modifier = Modifier.width(400.dp)) {
-                                Text("Left")
-                            }
-                            FloatingActionButton(onClick = {
-                                outStream.write("5".toByteArray())
-                            }, modifier = Modifier.width(400.dp)) {
-                                Text("Grab")
-                            }
-                            FloatingActionButton(onClick = {
-                                outStream.write("4".toByteArray())
-                            }, modifier = Modifier.width(400.dp))  {
-                                Text("Right")
-                            }
-                        }
-                            FloatingActionButton(onClick = {
-                                outStream.write("2".toByteArray())
-                            }, modifier = Modifier.width(400.dp)) {
-                                Text("Reverse")
+                            Row (verticalAlignment = Alignment.CenterVertically) {
+                                FloatingActionButton(onClick = {
+                                    //println(bluetoothAdapter.bondedDevices)
+                                    //println(bluetoothSocket.isConnected)
+                                    sendData("7", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Lift")
+                                }
+
+                                FloatingActionButton(onClick = {
+                                    //println(bluetoothAdapter.bondedDevices)
+                                    //println(bluetoothSocket.isConnected)
+                                    sendData("1", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Forward")
+                                }
+
+                                FloatingActionButton(onClick = {
+                                    //println(bluetoothAdapter.bondedDevices)
+                                    //println(bluetoothSocket.isConnected)
+                                    sendData("8", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Lower")
+                                }
+
                             }
 
-                            FloatingActionButton(onClick = {
-                                outStream.write("6".toByteArray())
-                                             /*TODO
-                        Send signal for forward motion*/
-                            }, modifier = Modifier.width(400.dp)) {
-                                Text("Release")
+                            Row (verticalAlignment = Alignment.CenterVertically) {
+                                FloatingActionButton(onClick = {
+                                    sendData("3", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Left")
+                                }
+                                FloatingActionButton(onClick = {
+                                    sendData("5", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Grab")
+                                }
+                                FloatingActionButton(onClick = {
+                                    sendData("4", outStream);
+                                }, modifier = Modifier.width(400.dp))  {
+                                    Text("Right")
+                                }
+                            }
+
+                            Row (verticalAlignment = Alignment.CenterVertically) {
+                                FloatingActionButton(onClick = {
+                                    sendData("6", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Release")
+                                }
+
+                                FloatingActionButton(onClick = {
+                                    sendData("2", outStream);
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Reverse")
+                                }
+
+                                FloatingActionButton(onClick = {
+                                    try {
+                                        bluetoothSocket.connect()
+                                    } catch (e: IOException) {
+                                        Log.e("Bluetooth", "IOException")
+                                    }
+                                }, modifier = Modifier.width(400.dp)) {
+                                    Text("Connect")
+                                }
                             }
                         }
                     }
@@ -127,7 +159,6 @@ class MainActivity : ComponentActivity() {
 
         }
     }
-}
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
@@ -172,6 +203,10 @@ fun showBluetoothPermissionRationale() {
             }
         })
 }*/
-fun sendData(data: Int, dataoutstream: DataOutputStream) {
-    dataoutstream.writeInt(data)
+fun sendData(data: String, outStream: OutputStream) {
+    try {
+        outStream.write(data.toByteArray())
+    } catch (e: IOException) {
+        Log.e("Bluetooth", "No Outstream")
+    }
 }
