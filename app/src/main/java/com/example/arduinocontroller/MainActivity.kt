@@ -10,9 +10,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -22,6 +23,8 @@ import java.io.DataOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.util.*
+import kotlin.math.round
+import kotlin.math.truncate
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,11 +43,6 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         }
 
-        /*ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
-            1)*/
-
         val UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
@@ -61,14 +59,16 @@ class MainActivity : ComponentActivity() {
         println(bluetoothSocket.isConnected)
         val outStream = bluetoothSocket.outputStream
 
+
         setContent {
             ArduinoControllerTheme {
+                var sliderPosition by remember { mutableStateOf(0f) }
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     //Greeting("There")
 
                     Column (modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
+                            verticalArrangement = Arrangement.SpaceEvenly,
                             horizontalAlignment = Alignment.CenterHorizontally) {
                         Row (modifier = Modifier.fillMaxWidth(),
                              verticalAlignment = Alignment.CenterVertically,
@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                                 //println(bluetoothAdapter.bondedDevices)
                                 //println(bluetoothSocket.isConnected)
                                 sendData("1", outStream);
-                            }, modifier = Modifier.fillMaxWidth(1/2f)) {
+                            }, modifier = Modifier.fillMaxWidth(1/2f), containerColor = Color.Green) {
                                 Text("Forward")
                             }
 
@@ -102,17 +102,17 @@ class MainActivity : ComponentActivity() {
                         Row (verticalAlignment = Alignment.CenterVertically) {
                             FloatingActionButton(onClick = {
                                 sendData("3", outStream);
-                            }, modifier = Modifier.fillMaxWidth(1/3f)) {
+                            }, modifier = Modifier.fillMaxWidth(1/3f), containerColor = Color.Green) {
                                 Text("Left")
                             }
                             FloatingActionButton(onClick = {
                                 sendData("10", outStream);
-                            }, modifier = Modifier.fillMaxWidth(1/2f)) {
+                            }, modifier = Modifier.fillMaxWidth(1/2f), containerColor = Color.Red) {
                                 Text("Stop")
                             }
                             FloatingActionButton(onClick = {
                                 sendData("4", outStream);
-                            }, modifier = Modifier.fillMaxWidth())  {
+                            }, modifier = Modifier.fillMaxWidth(), containerColor = Color.Green)  {
                                 Text("Right")
                             }
                         }
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
                             FloatingActionButton(onClick = {
                                 sendData("2", outStream);
-                            }, modifier = Modifier.fillMaxWidth(1/2f)) {
+                            }, modifier = Modifier.fillMaxWidth(1/2f), containerColor = Color.Green) {
                                 Text("Reverse")
                             }
 
@@ -145,70 +145,21 @@ class MainActivity : ComponentActivity() {
                         }, modifier = Modifier.fillMaxWidth().padding(10.dp,50.dp)) {
                             Text("Connect")
                         }
+                        Slider(
+                            value = sliderPosition,
+                            valueRange = 0f..100f,
+                            steps = 4,
+                            onValueChange = { sliderPosition = it },
+                            onValueChangeFinished = {sendData((100+sliderPosition).toInt().toString(), outStream)},
+                        )
+                        Text(text = "Speed: $sliderPosition (Fraction of Max)")
+                        }
                     }
                 }
             }
         }
-
-
-            /*val bluetoothPermissions = arrayOf(
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_SCAN
-        )*/
-            /*val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions(),
-            onResult = { permissions ->
-                val permissionsGranted = permissions.values.reduce { acc, isPermissionGranted ->
-                    acc && isPermissionGranted
-                }
-            })*/
-
-        }
     }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-            text = "Hello $name!",
-            modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ArduinoControllerTheme {
-        Greeting("Android")
-    }
-}
-
-/*@Composable
-fun showBluetoothPermissionRationale() {
-    AlertDialog(
-        onDismissRequest = {
-            //Logic when dismiss happens
-        },
-        title = {
-            Text("Permission Required")
-        },
-        text = {
-            Text("Bluetooth Required for App Functionality")
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                //Logic when user confirms to accept permissions
-            }) {
-                Text("Confirm")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = {
-                //Logic when user denies to accept permissions
-            }) {
-                Text("Deny")
-            }
-        })
-}*/
 fun sendData(data: String, outStream: OutputStream) {
     try {
         outStream.write(data.toByteArray())
